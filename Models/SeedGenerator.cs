@@ -149,30 +149,20 @@ namespace Seido.Utilities.SeedGenerator
         #region DateTime, bool and decimal
         public DateTime DateAndTime(int? fromYear = null, int? toYear = null)
         {
-            bool dateOK = false;
-            DateTime _date = default;
-            while (!dateOK)
-            {
-                fromYear ??= DateTime.Today.Year;
-                toYear ??= DateTime.Today.Year + 1;
+            fromYear ??= DateTime.Today.Year;
+            toYear ??= DateTime.Today.Year + 1;
 
-                try
-                {
-                    int year = this.Next(Math.Min(fromYear.Value, toYear.Value),
-                        Math.Max(fromYear.Value, toYear.Value));
-                    int month = this.Next(1, 13);
-                    int day = this.Next(1, 32);
+            int year = this.Next(Math.Min(fromYear.Value, toYear.Value),
+                Math.Max(fromYear.Value, toYear.Value));
+            
+            DateTime startDate = new DateTime(year, 1, 1);
+            DateTime endDate = new DateTime(year, 12, 31);
+            
+            int range = (endDate - startDate).Days;
+            TimeSpan randomOffset = TimeSpan.FromDays(this.Next(0, range + 1));
+            DateTime randomDate = startDate.Add(randomOffset);
 
-                    _date = new DateTime(year, month, day);
-                    dateOK = true;
-                }
-                catch
-                {
-                    dateOK = false;
-                }
-            }
-
-            return DateTime.SpecifyKind(_date, DateTimeKind.Utc);
+            return DateTime.SpecifyKind(randomDate, DateTimeKind.Utc);
         }
 
         public bool Bool => (this.Next(0, 10) < 5) ? true : false;
