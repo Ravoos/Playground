@@ -179,63 +179,35 @@ public static class StateExtensionExamples
         
         Console.WriteLine($"Working with {musicGroups.Count} music groups");
         
-        // Example 1: Record label budget allocation with structured revenue tracking
-        var initialLabelState = new LabelBudgetState(5_000_000m, 0m, 0m, 0);
-        var budgetState = initialLabelState
+        // Example 1: Record label budget allocation (simplified)
+        var labelBudget = 5_000_000m;
+        var budgetState = labelBudget
             .ToState(musicGroups)
-            .Bind((labelState, groups) => {
+            .Bind((budget, groups) => {
                 var totalRevenue = groups.Sum(g => g.Albums.Sum(a => a.CopiesSold * 15.99m));
-                var investmentPerGroup = labelState.Budget / Math.Max(1, groups.Count);
-                var roi = totalRevenue / Math.Max(1, labelState.Budget - (labelState.Budget * 0.2m)); // 20% overhead
+                var remainingBudget = budget - (totalRevenue * 0.1m); // 10% investment cost
                 
-                var updatedLabelState = labelState with { 
-                    Revenue = totalRevenue,
-                    Reserve = labelState.Budget * 0.2m,
-                    GroupsProcessed = groups.Count
-                };
-                
-                var allocation = $"Allocated ${investmentPerGroup:N0} per group, " +
-                               $"Generated ${totalRevenue:N0} revenue, ROI: {roi:P1}";
-                
-                return allocation.WithState(updatedLabelState);
+                var allocation = $"Generated ${totalRevenue:N0} revenue from {groups.Count} groups";
+                return allocation.WithState(remainingBudget);
             });
             
         Console.WriteLine($"Label Budget: {budgetState.CurrentValue}");
-        Console.WriteLine($"Label State: {LabelBudgetStateToString(budgetState.CurrentState)}\n");
+        Console.WriteLine($"Remaining budget: ${budgetState.CurrentState:N0}\n");
         
-        // Example 2: Festival lineup curation with structured stage time allocation
-        var initialStageState = new StageTimeState(480, 0, new List<string>()); // 8 hours in minutes
-        var lineupState = initialStageState
-            .ToState(musicGroups.OrderByDescending(g => g.Albums.Sum(a => a.CopiesSold)).Take(12).ToList())
-            .Bind((stageState, topGroups) => {
-                var timePerGroup = (stageState.TotalMinutes - stageState.UsedMinutes) / Math.Max(1, topGroups.Count);
-                var lineup = topGroups.Select((group, index) => {
-                    var slotTime = index < 3 ? timePerGroup + 15 : timePerGroup; // Headliners get extra time
-                    var sales = group.Albums.Sum(a => a.CopiesSold);
-                    var lineupEntry = $"{group.Name} ({group.Genre}): {slotTime}min, {sales:N0} sales";
-                    return new {
-                        Group = group,
-                        TimeSlot = slotTime,
-                        Description = lineupEntry
-                    };
-                }).ToList();
+        // Example 2: Festival lineup curation (simplified)
+        var totalMinutes = 480; // 8 hours
+        var lineupState = totalMinutes
+            .ToState(musicGroups.OrderByDescending(g => g.Albums.Sum(a => a.CopiesSold)).Take(6).ToList())
+            .Bind((minutes, topGroups) => {
+                var timePerGroup = minutes / Math.Max(1, topGroups.Count);
+                var usedTime = topGroups.Count * timePerGroup;
                 
-                var usedTime = lineup.Sum(l => l.TimeSlot);
-                var lineupList = lineup.Select(l => l.Description).ToList();
-                
-                var updatedStageState = stageState with { 
-                    UsedMinutes = stageState.UsedMinutes + usedTime,
-                    Lineup = stageState.Lineup.Concat(lineupList).ToList()
-                };
-                
-                var lineupDetails = $"Festival Lineup ({lineup.Count} groups):\n  " + 
-                                  string.Join("\n  ", lineup.Select(l => l.Description));
-                
-                return lineupDetails.WithState(updatedStageState);
+                var lineupDetails = $"Festival Lineup ({topGroups.Count} groups, {timePerGroup}min each)";
+                return lineupDetails.WithState(minutes - usedTime);
             });
             
         Console.WriteLine($"{lineupState.CurrentValue}");
-        Console.WriteLine($"Stage State: {StageTimeStateToString(lineupState.CurrentState)}\n");
+        Console.WriteLine($"Remaining time: {lineupState.CurrentState}min\n");
         
         // Example 3: Sequential music group signing with investment tracking
         SequentialMusicGroupProcessing(musicGroups);
@@ -246,35 +218,30 @@ public static class StateExtensionExamples
         Console.WriteLine("--- Sequential Music Group Processing ---");
         
         // Simple record label signing decisions based on budget
-        var initialMetrics = new InvestmentMetrics(0, 500_000m, new List<string>());
+        var initialBudget = 500_000m;
         
-        var finalState = musicGroups.Take(8).Aggregate(
-            initialMetrics.ToState("Starting group evaluations"),
-            (currentState, group) => currentState.Bind((metrics, report) => {
+        var finalState = musicGroups.Take(6).Aggregate(
+            initialBudget.ToState("Starting group evaluations"),
+            (currentState, group) => currentState.Bind((budget, report) => {
                 var totalSales = group.Albums.Sum(a => a.CopiesSold);
                 var signingCost = totalSales > 100_000 ? 80_000m : 40_000m;
                 
-                if (metrics.BudgetRemaining >= signingCost)
+                if (budget >= signingCost)
                 {
-                    var newMetrics = metrics with {
-                        GroupsSigned = metrics.GroupsSigned + 1,
-                        BudgetRemaining = metrics.BudgetRemaining - signingCost,
-                        SignedGroups = metrics.SignedGroups.Append(group.Name).ToList()
-                    };
-                    
+                    var newBudget = budget - signingCost;
                     var newReport = $"{report}\n  ✓ Signed {group.Name} - Cost: ${signingCost:N0}";
-                    return newReport.WithState(newMetrics);
+                    return newReport.WithState(newBudget);
                 }
                 else
                 {
                     var newReport = $"{report}\n  ✗ Passed on {group.Name} - Budget insufficient";
-                    return newReport.WithState(metrics);
+                    return newReport.WithState(budget);
                 }
             })
         );
         
         Console.WriteLine($"{finalState.CurrentValue}");
-        Console.WriteLine($"\nSimple Investment State: {InvestmentMetricsToString(finalState.CurrentState)}\n");
+        Console.WriteLine($"Remaining budget: ${finalState.CurrentState:N0}\n");
     }
     
     #endregion
