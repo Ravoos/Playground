@@ -76,7 +76,7 @@ namespace Seido.Utilities.SeedGenerator
             fname ??= FirstName;
             lname ??= LastName;
 
-            return $"{fname}.{lname}@{_seeds.Domains.Domains[this.Next(0, _seeds.Domains.Domains.Count)]}";
+            return $"{fname.Replace(" ", "_")}.{lname.Replace(" ", "_")}@{_seeds.Domains.Domains[this.Next(0, _seeds.Domains.Domains.Count)]}";
         }
 
         public string PhoneNr => $"{this.Next(700, 800)} {this.Next(100, 1000)} {this.Next(100, 1000)}";
@@ -194,7 +194,12 @@ namespace Seido.Utilities.SeedGenerator
         }
         #endregion
 
-        #region Generate seeded List of TItem
+        #region Generate seeded TItem and List of TItem
+
+        //ISeed<TItem> has to be implemented to use this method
+        public TItem Mock<TItem>() 
+            where TItem : ISeed<TItem>, new() =>
+            new TItem() { Seeded = true }.Seed(this);
 
         //ISeed<TItem> has to be implemented to use this method
         public List<TItem> ItemsToList<TItem>(int NrOfItems)
