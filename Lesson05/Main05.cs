@@ -12,16 +12,16 @@ public static class Main05
         System.Console.WriteLine("Hello Lesson 05!");
 
         // Lazy Employee Examples
-        LazyEmployeeExamples.RunExamples();
+        //LazyEmployeeExamples.RunExamples();
         
         // // Lazy Music Group Examples
-        // LazyMusicGroupExamples.RunExamples();
+        //LazyMusicGroupExamples.RunExamples();
 
         // //Lazy Employee Exercise: Working with Lazy<T>
         // LazyEmployeeExercise.RunExercise();
 
         // // Credit Card Encryption Examples
-        // EncryptionExamples.RunExamples();
+         EncryptionExamples.RunExamples();
 
         // // Employee Encryption Exercise
         // EmployeeEncryptionExercise.RunExercise();

@@ -23,8 +23,7 @@ public record MusicGroupLazy (
         var lazyAlbums = new Lazy<ImmutableList<Album>>(() =>
         {
             Console.WriteLine($"[Lazy Loading] Generating albums for music group...");
-            var albums = seedGenerator.ItemsToList<Album>(seedGenerator.Next(1, 11));
-            return albums.ToImmutableList();
+            return seedGenerator.ItemsToList<Album>(seedGenerator.Next(1, 11)).ToImmutableList();
         });
 
         var lazyArtists = new Lazy<ImmutableList<Artist>>(() =>

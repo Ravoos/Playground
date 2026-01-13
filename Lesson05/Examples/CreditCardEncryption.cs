@@ -27,6 +27,20 @@ public static class EncryptionExamples
         Console.WriteLine("\n=== Credit Card Encryption Examples ===\n");
 
         var seeder = new SeedGenerator();
+        // var cc = seeder.ItemsToList<CreditCard>(1).First();
+        // System.Console.WriteLine($"Original Credit Card:\n  Issuer: {cc.Issuer}\n  Number: {cc.Number}\n  Expiration: {cc.ExpirationMonth}/{cc.ExpirationYear}\n");
+
+        // var obfuscatedCC = _ccObfuscator(cc);
+        // System.Console.WriteLine($"Original Credit Card:\n  Issuer: {obfuscatedCC.Item2.Issuer}\n  Number: {obfuscatedCC.Item2.Number}\n  Expiration: {obfuscatedCC.Item2.ExpirationMonth}/{obfuscatedCC.Item2.ExpirationYear}\n");
+
+
+        // var encryptor = new EncryptionEngine(AesEncryptionOptions.Default());
+        // var encryptedCC = encryptor.AesEncryptToBase64(cc);
+        // System.Console.WriteLine($"Encrypted Credit Card Data (Base64):\n  {encryptedCC}\n");
+
+        // var decryptedCC = encryptor.AesDecryptFromBase64<CreditCard>(encryptedCC);
+        // System.Console.WriteLine($"Original Credit Card:\n  Issuer: {decryptedCC.Issuer}\n  Number: {decryptedCC.Number}\n  Expiration: {decryptedCC.ExpirationMonth}/{decryptedCC.ExpirationYear}\n");
+
         var employees = seeder.ItemsToList<Employee>(100);
 
         CreditCardEncryption(employees);

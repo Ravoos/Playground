@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Playground.Lesson05.Examples;
 
-public static class EmployeeEncryptionExercise
+public static class EmployeeEncryptionExerciseAnswers
 {
     // Credit card obfuscator from CreditCardEncryption pattern
     static Func<CreditCard, (CreditCard original, CreditCard obfuscated)> _ccObfuscator = cc => {
