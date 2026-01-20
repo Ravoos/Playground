@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Playground.Lesson05.Examples;
 
-public static class EmployeeEncryptionExercise
+public static class EmployeeEncryptionExerciseAnswers
 {
     // Credit card obfuscator from CreditCardEncryption pattern
     static Func<CreditCard, (CreditCard original, CreditCard obfuscated)> _ccObfuscator = cc => {
@@ -24,18 +24,14 @@ public static class EmployeeEncryptionExercise
 
     // Employee obfuscation function
     static Func<Employee, Employee> _employeeObfuscator = emp => {
-        var obfuscatedFirstName = Regex.Replace(emp.FirstName, @"(?<=.).(?=.)", "*");
-        var obfuscatedLastName =  Regex.Replace(emp.LastName, @"(?<=.).(?=.)", "*");
-        var obfuscatedHireDate = new DateTime(emp.HireDate.Year, 1, 1); // Keep only year
-        var obfuscatedCreditCards = emp.CreditCards
-            .Select(cc => _ccObfuscator(cc).obfuscated)
-            .ToImmutableList();
+        
+        //Create obfuscated fields
 
         return emp with {
-            FirstName = obfuscatedFirstName,
-            LastName = obfuscatedLastName,
-            HireDate = obfuscatedHireDate,
-            CreditCards = obfuscatedCreditCards
+            //FirstName = obfuscatedFirstName,
+            //LastName = obfuscatedLastName,
+            //HireDate = obfuscatedHireDate,
+            //CreditCards = obfuscatedCreditCards
         };
     };
 
@@ -53,12 +49,34 @@ public static class EmployeeEncryptionExercise
         Console.WriteLine(FormatEmployees(employees.Take(3)));
 
         // Part 2: Employee Obfuscation
+        var obfuscatedEmployees = employees
+            .Select(emp => _employeeObfuscator(emp))
+            .ToList();
+
+        Console.WriteLine("2. Obfuscated Employees (showing 3):");
+        Console.WriteLine(FormatEmployeesObfuscated(obfuscatedEmployees.Take(3)));
 
         // Part 3: Full Employee Encryption
+        var encryptedEmployees = employees
+            .Select(emp => (emp.EmployeeId, encryptor.AesEncryptToBase64(emp)))
+            .ToList();
+
+        Console.WriteLine("3. Encrypted Employees (showing 3):");
+        Console.WriteLine(FormatEncryptedEmployees(encryptedEmployees.Take(3)));
 
         // Part 4: Employee Decryption and Verification
+        var decryptedEmployees = encryptedEmployees
+            .Select(encrypted => encryptor.AesDecryptFromBase64<Employee>(encrypted.Item2))
+            .ToList();
+
+        Console.WriteLine("4. Decrypted Employees (showing 3):");
+        Console.WriteLine(FormatEmployees(decryptedEmployees.Take(3)));
 
         // Data Integrity Verification
+        Console.WriteLine("5. Data Integrity Verification:");
+        Console.WriteLine(EncryptionExamples.VerifyDataIntegrity(employees, decryptedEmployees)
+            ? "   Data integrity verified: Decrypted data matches original."
+            : "   Data integrity check failed: Decrypted data does not match original.");
         Console.WriteLine("\n=== End of Employee Encryption Exercise ===\n");
     }
 

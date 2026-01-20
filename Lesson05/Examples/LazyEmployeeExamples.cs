@@ -25,7 +25,7 @@ public static class LazyEmployeeExamples
     private static void LazyEmployeeSummaryExample(IList<Employee> employees)
     {
         Console.WriteLine("1. Lazy Employee Summary Example:");
-
+            
         // Create a lazy computation that won't execute until accessed
         var lazyEmployeeSummary = new Lazy<string>(() =>
         {

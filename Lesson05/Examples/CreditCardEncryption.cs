@@ -74,7 +74,7 @@ public static class EncryptionExamples
         Console.WriteLine(FormatEmployeesWithEncryptedCreditCards(empEncryptedCC.Take(5)));
 
 
-        var empDecryptedCC = employees.Join(empEncryptedCC, 
+        var empDecryptedCC = empWithObfuscatedCC.Join(empEncryptedCC, 
                 e => e.EmployeeId, e => e.EmployeeId, 
                 (original, encrypted) => original with { CreditCards = encrypted.Item2
                             .Select(cc => encryptor.AesDecryptFromBase64<CreditCard>(cc.Item2))
