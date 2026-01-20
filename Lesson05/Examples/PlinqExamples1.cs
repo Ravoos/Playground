@@ -9,7 +9,7 @@ public static class PlinqExamples1
         var timer = new Stopwatch();
 
         // Primes Count Example
-        PrimesExample(timer);
+        //PrimesExample(timer);
 
         // Actual Primes Example
         ActualPrimesExample(timer);
@@ -17,7 +17,7 @@ public static class PlinqExamples1
 
     static public void PrimesExample(Stopwatch timer)
     {
-        var count = 1_000; // test without debugger 1, 10 million and see the time difference
+        var count = 10_000_000; // test without debugger 1, 10 million and see the time difference
 
         System.Console.WriteLine($"Finding primes between 2 and {count:N0} using Linq and PLinq...");
         timer.Start();

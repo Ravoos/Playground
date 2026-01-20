@@ -12,23 +12,23 @@ public static class Main05
         System.Console.WriteLine("Hello Lesson 05!");
 
         //Lazy Employee Examples
-        //LazyEmployeeExamples.RunExamples();
+        LazyEmployeeExamples.RunExamples();
         
-        // // Lazy Music Group Examples
-        //LazyMusicGroupExamples.RunExamples();
+        // Lazy Music Group Examples
+        LazyMusicGroupExamples.RunExamples();
 
-        // //Lazy Employee Exercise: Working with Lazy<T>
-        // LazyEmployeeExercise.RunExercise();
+        //Lazy Employee Exercise: Working with Lazy<T>
+        LazyEmployeeExercise.RunExercise();
 
-        // Credit Card Encryption Examples
-        //EncryptionExamples.RunExamples();
+        //Credit Card Encryption Examples
+        EncryptionExamples.RunExamples();
 
-        // // Employee Encryption Exercise
-        // EmployeeEncryptionExerciseAnswers.RunExercise();
+        // Employee Encryption Exercise
+        EmployeeEncryptionExerciseAnswers.RunExercise();
 
-        // // PLINQ Examples
-        // PlinqExamples1.RunExamples();
-        // PlinqExamples2.RunExamples();   
+        //PLINQ Examples
+        PlinqExamples1.RunExamples();
+        PlinqExamples2.RunExamples();   
     }
 
 }
