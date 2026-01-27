@@ -4,6 +4,9 @@ using Models.FileSystem;
 
 namespace Playground.Lesson07.ExerciseAnswers;
 
+/// <summary>
+/// Solutions to the File System Recursion Exercises
+/// </summary>
 public static class FileSystemExercises
 {
     public static void RunExamples()
@@ -106,34 +109,31 @@ public static class FileSystemExercises
         var totalMB = report.TotalSize / (1024.0 * 1024.0);
         Console.WriteLine($"  Total Size: {report.TotalSize:N0} bytes ({(totalGB >= 1 ? $"{totalGB:F2} GB" : $"{totalMB:F2} MB")})");
         
-        // Uncomment below to show detailed extension report
-        // Commented out to avoid null exceptions in case methods are not fully implemented
+        Console.WriteLine("\n  By Extension:");
+        var topExtensions = report.FilesByExtension
+            .OrderByDescending(kvp => kvp.Value)
+            .Take(10);
         
-        // Console.WriteLine("\n  By Extension:");
-        // var topExtensions = report.FilesByExtension
-        //     .OrderByDescending(kvp => kvp.Value)
-        //     .Take(10);
+        foreach (var (ext, count) in topExtensions)
+        {
+            var size = report.SizeByExtension.GetValueOrDefault(ext, 0);
+            var sizeMB = size / (1024.0 * 1024.0);
+            var extDisplay = string.IsNullOrEmpty(ext) ? "(no extension)" : $".{ext}";
+            Console.WriteLine($"    {extDisplay,-15} {count,4} files ({sizeMB,8:F2} MB)");
+        }
         
-        // foreach (var (ext, count) in topExtensions)
-        // {
-        //     var size = report.SizeByExtension.GetValueOrDefault(ext, 0);
-        //     var sizeMB = size / (1024.0 * 1024.0);
-        //     var extDisplay = string.IsNullOrEmpty(ext) ? "(no extension)" : $".{ext}";
-        //     Console.WriteLine($"    {extDisplay,-15} {count,4} files ({sizeMB,8:F2} MB)");
-        // }
+        Console.WriteLine("\nFile Age:");
+        if (report.OldestFile != null)
+            Console.WriteLine($"  Oldest File: {report.OldestFile.FullName} (Created: {report.OldestFile.Created:yyyy-MM-dd})");
+        if (report.NewestFile != null)
+            Console.WriteLine($"  Newest File: {report.NewestFile.FullName} (Modified: {report.NewestFile.Modified:yyyy-MM-dd})");
         
-        // Console.WriteLine("\nFile Age:");
-        // if (report.OldestFile != null)
-        //     Console.WriteLine($"  Oldest File: {report.OldestFile.FullName} (Created: {report.OldestFile.Created:yyyy-MM-dd})");
-        // if (report.NewestFile != null)
-        //     Console.WriteLine($"  Newest File: {report.NewestFile.FullName} (Modified: {report.NewestFile.Modified:yyyy-MM-dd})");
-        
-        // if (report.DeepestDirectory != null)
-        // {
-        //     Console.WriteLine("\nDirectory Structure:");
-        //     Console.WriteLine($"  Deepest Directory: {report.DeepestDirectoryPath}");
-        //     Console.WriteLine($"  Depth: {report.MaxDepth} levels");
-        // }
+        if (report.DeepestDirectory != null)
+        {
+            Console.WriteLine("\nDirectory Structure:");
+            Console.WriteLine($"  Deepest Directory: {report.DeepestDirectoryPath}");
+            Console.WriteLine($"  Depth: {report.MaxDepth} levels");
+        }
     }
 }
 
@@ -157,31 +157,43 @@ public record DirectoryNodeExtended(
     public long GetTotalSizeInBytes()
     {
         // Base case: sum of all files in current directory
+        var currentDirSize = Files.Sum(f => f.Size);
         
         // Recursive case: add sizes from all subdirectories
+        var subdirectoriesSize = Subdirectories.Sum(subdir => subdir.GetTotalSizeInBytes());
         
-        return 0; // Placeholder
+        return currentDirSize + subdirectoriesSize;
     }
 
     // Exercise 2: Find Files by Extension
     public ImmutableList<FileNodeExtended> FindFilesByExtension(string extension)
     {
         // Normalize extension (remove dot, make lowercase)
+        var normalizedExt = extension.TrimStart('.').ToLower();
         
         // Base case: filter files in current directory
+        var matchingFiles = Files
+            .Where(f => f.Extension.ToLower() == normalizedExt)
+            .ToList();
         
         // Recursive case: add matching files from all subdirectories
+        foreach (var subdir in Subdirectories)
+        {
+            matchingFiles.AddRange(subdir.FindFilesByExtension(normalizedExt));
+        }
         
-        return ImmutableList<FileNodeExtended>.Empty; // Placeholder
+        return matchingFiles.ToImmutableList();
     }
 
     // Exercise 3: Calculate Maximum Depth
     public int GetMaxDepth()
     {
         // Base case: no subdirectories means depth is 0
+        if (Subdirectories.IsEmpty)
+            return 0;
         
         // Recursive case: 1 + maximum depth of all subdirectories
-        return 0;
+        return 1 + Subdirectories.Max(subdir => subdir.GetMaxDepth());
     }
 
     // Exercise 4: Find Largest File Path
@@ -193,13 +205,27 @@ public record DirectoryNodeExtended(
         // Find largest file in current directory
         FileNodeExtended? largestInCurrent = null;
         string largestPath = "";
-                
-        // Recursive case: check all subdirectories
-        foreach (var subdir in Subdirectories)
+        
+        if (Files.Any())
         {
+            largestInCurrent = Files.OrderByDescending(f => f.Size).First();
+            largestPath = $"{thisPath}/{largestInCurrent.FullName}";
         }
         
-        // base case: return largest found
+        // Recursively check all subdirectories
+        foreach (var subdir in Subdirectories)
+        {
+            var (subdirLargest, subdirPath) = subdir.FindLargestFile(thisPath);
+            
+            // Compare with current largest
+            if (subdirLargest != null && 
+                (largestInCurrent == null || subdirLargest.Size > largestInCurrent.Size))
+            {
+                largestInCurrent = subdirLargest;
+                largestPath = subdirPath;
+            }
+        }
+        
         return (largestInCurrent, largestPath);
     }
 
@@ -208,7 +234,7 @@ public record DirectoryNodeExtended(
     {
         var result = new Dictionary<string, int>();
         
-        // Add files from current directory into dictionary
+        // Add files from current directory
         foreach (var file in Files)
         {
             var ext = file.Extension.ToLower();
@@ -216,9 +242,16 @@ public record DirectoryNodeExtended(
         }
         
         // Recursively add from subdirectories
+        foreach (var subdir in Subdirectories)
+        {
+            var subdirResult = subdir.GetFilesByExtensionRecursive();
+            foreach (var (ext, count) in subdirResult)
+            {
+                result[ext] = result.GetValueOrDefault(ext, 0) + count;
+            }
+        }
         
-        
-        return null; // Placeholder
+        return result;
     }
 
     public Dictionary<string, long> GetSizeByExtensionRecursive()
@@ -226,10 +259,23 @@ public record DirectoryNodeExtended(
         var result = new Dictionary<string, long>();
         
         // Add sizes from current directory
+        foreach (var file in Files)
+        {
+            var ext = file.Extension.ToLower();
+            result[ext] = result.GetValueOrDefault(ext, 0) + file.Size;
+        }
         
         // Recursively add from subdirectories
-
-        return null; // Placeholder
+        foreach (var subdir in Subdirectories)
+        {
+            var subdirResult = subdir.GetSizeByExtensionRecursive();
+            foreach (var (ext, size) in subdirResult)
+            {
+                result[ext] = result.GetValueOrDefault(ext, 0) + size;
+            }
+        }
+        
+        return result;
     }
 
     public (FileNodeExtended? OldestFile, DateTime OldestDate) GetOldestFileRecursive()
@@ -238,8 +284,25 @@ public record DirectoryNodeExtended(
         DateTime oldestDate = DateTime.MaxValue;
         
         // Check files in current directory
+        foreach (var file in Files)
+        {
+            if (file.Created < oldestDate)
+            {
+                oldest = file;
+                oldestDate = file.Created;
+            }
+        }
         
         // Recursively check subdirectories
+        foreach (var subdir in Subdirectories)
+        {
+            var (subdirOldest, subdirDate) = subdir.GetOldestFileRecursive();
+            if (subdirOldest != null && subdirDate < oldestDate)
+            {
+                oldest = subdirOldest;
+                oldestDate = subdirDate;
+            }
+        }
         
         return (oldest, oldestDate);
     }
@@ -250,9 +313,26 @@ public record DirectoryNodeExtended(
         DateTime newestDate = DateTime.MinValue;
         
         // Check files in current directory
+        foreach (var file in Files)
+        {
+            if (file.Modified > newestDate)
+            {
+                newest = file;
+                newestDate = file.Modified;
+            }
+        }
         
         // Recursively check subdirectories
-
+        foreach (var subdir in Subdirectories)
+        {
+            var (subdirNewest, subdirDate) = subdir.GetNewestFileRecursive();
+            if (subdirNewest != null && subdirDate > newestDate)
+            {
+                newest = subdirNewest;
+                newestDate = subdirDate;
+            }
+        }
+        
         return (newest, newestDate);
     }
 
@@ -266,7 +346,17 @@ public record DirectoryNodeExtended(
         string deepestPath = thisPath;
         
         // Recursively check all subdirectories
-
+        foreach (var subdir in Subdirectories)
+        {
+            var (subdirDeepest, subdirDepth, subdirPath) = subdir.GetDeepestDirectoryRecursive(thisPath, currentDepth + 1);
+            
+            if (subdirDepth > maxDepth)
+            {
+                deepestDir = subdirDeepest;
+                maxDepth = subdirDepth;
+                deepestPath = subdirPath;
+            }
+        }
         
         return (deepestDir, maxDepth, deepestPath);
     }
@@ -274,18 +364,20 @@ public record DirectoryNodeExtended(
     public ImmutableList<FileNodeExtended> GetAllFilesRecursively()
     {
         var allFiles = Files.ToList();
-
-        // Recursively add files from subdirectories
-
+        foreach (var subdir in Subdirectories)
+        {
+            allFiles.AddRange(subdir.GetAllFilesRecursively());
+        }
         return allFiles.ToImmutableList();
     }
 
     public ImmutableList<DirectoryNodeExtended> GetAllDirectoriesRecursively()
     {
         var allDirs = Subdirectories.ToList();
-
-        // Recursively add directories from subdirectories
-
+        foreach (var subdir in Subdirectories)
+        {
+            allDirs.AddRange(subdir.GetAllDirectoriesRecursively());
+        }
         return allDirs.ToImmutableList();
     }
 }
