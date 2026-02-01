@@ -1,10 +1,9 @@
 ﻿using System.Collections.Immutable;
-using PlayGround.Extensions;
 
-namespace Playground.Projects.Poker.Models;
-public record CardDeck (ImmutableList<Card> cards)
+namespace Playground.Projects.Poker_optional.Models;
+public record CardDeck(ImmutableList<Card> cards)
 {
-    public CardDeck(): this(ImmutableList<Card>.Empty){}
+    public CardDeck() : this(ImmutableList<Card>.Empty) { }
 
     public override string ToString()
     {
@@ -17,7 +16,7 @@ public record CardDeck (ImmutableList<Card> cards)
         }
         return sRet;
     }
-    public static CardDeck Create()   
+    public static CardDeck Create()
     {
         var cards = new List<Card>();
         cards.Clear();
@@ -25,7 +24,7 @@ public record CardDeck (ImmutableList<Card> cards)
         {
             for (CardRank v = CardRank.Two; v <= CardRank.Ace; v++)
             {
-                cards.Add(new Card (c, v));
+                cards.Add(new Card(c, v));
             }
         }
         return new CardDeck(cards.ToImmutableList());

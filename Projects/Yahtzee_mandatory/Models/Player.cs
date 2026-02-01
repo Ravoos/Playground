@@ -1,9 +1,6 @@
-﻿using System.Collections.Immutable;
-using Microsoft.Extensions.Logging;
+﻿namespace Playground.Projects.Yahtzee_mandatory.Models;
 
-namespace Playground.Projects.Yahtzee.Models;
-
-public record Player (string Name, YahzeeCup YahzeeCup)
+public record Player(string Name, YahzeeCup YahzeeCup, ScoreCard ScoreCard)
 {
-	public override string ToString() => $"Player: {Name}, Hand: {YahzeeCup}";
+    public override string ToString() => $"Player: {Name}, Hand: {YahzeeCup}, ScoreCard: {ScoreCard}";
 }

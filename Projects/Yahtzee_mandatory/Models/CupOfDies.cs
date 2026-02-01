@@ -1,11 +1,11 @@
 using System.Collections.Immutable;
 
-namespace Playground.Projects.Yahtzee.Models;
+namespace Playground.Projects.Yahtzee_mandatory.Models;
 
 
-public record CupOfDice (int NrOfDice, ImmutableList<Die> dice)
+public record CupOfDice(int NrOfDice, ImmutableList<Die> dice)
 {
-    public CupOfDice(int NrOfDice): this(NrOfDice, ImmutableList<Die>.Empty)
+    public CupOfDice(int NrOfDice) : this(NrOfDice, ImmutableList<Die>.Empty)
     {
         if (NrOfDice < 0)
             throw new ArgumentException("Number of dies must be non-negative");

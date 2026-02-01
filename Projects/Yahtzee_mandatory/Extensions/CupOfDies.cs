@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
-using Playground.Projects.Yahtzee.Models;
+using Playground.Projects.Yahtzee_mandatory.Models;
 
-namespace Playground.Projects.Yahtzee.Extensions;
+namespace Playground.Projects.Yahtzee_mandatory.Extensions;
 
 public static class CupOfDiceExtensions
 {
