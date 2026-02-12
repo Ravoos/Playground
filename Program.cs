@@ -8,7 +8,7 @@ Console.WriteLine("Hello Playground!");
 // Playground.Lesson04.Main04.Entry();
 // Playground.Lesson05.Main05.Entry();
 //Playground.Lesson06.Main06.Entry();
-Playground.Lesson07.Main07.Entry();
+//Playground.Lesson07.Main07.Entry();
 
-// Playground.Projects.YahtzeeProject.Entry();
+Playground.Projects.YahtzeeProject.Entry();
 // Playground.Projects.PokerProject.Entry();   

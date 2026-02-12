@@ -103,10 +103,15 @@ public static class YahzeeGame
                 // Randomly decide how many dice to keep
                 var keepCount = Random.Shared.Next(1, 6);
 
-                var keptDice = cup.dice
-                    .OrderBy(_ => Random.Shared.Next())
-                    .Take(keepCount)
-                    .ToImmutableList();
+                var bestCombo =
+                    cup.GetAllYahtzeeCombinations()
+                        .FirstOrDefault(c => c is not Chance and not NoCombination);
+
+                ImmutableList<Die> keptDice =
+                    bestCombo is null
+                        ? KeepMostFrequentValue(cup)
+                        : bestCombo.dice.ToImmutableList();
+
 
                 // Create a new cup with kept dice with a placeholder
                 var newCup = new YahzeeCup
@@ -178,5 +183,13 @@ public static class YahzeeGame
 
         return card;
     }
+
+    static ImmutableList<Die> KeepMostFrequentValue(YahzeeCup cup) =>
+    cup.dice
+        .GroupBy(d => d.Pip)
+        .OrderByDescending(g => g.Count())
+        .ThenByDescending(g => (int)g.Key) // prefer higher values
+        .First()
+        .ToImmutableList();
 
 }
