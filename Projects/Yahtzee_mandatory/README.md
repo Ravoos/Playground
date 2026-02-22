@@ -5,8 +5,9 @@ To run the Yahtzee round simulation, go to program.cs and make sure that:
 ```
 	Playground.Projects.YahtzeeProject.Entry();
 ```
-is not commented out.
-Comment out any other project entry points if necessary.
+is not commented out, otherwise it will not run. 
+
+Comment out any other simulation project in the file if you wish to only run the yahtzee simulation.
 
 Then, run the program. The simulation will execute a single round of Yahtzee, rolling the dice and displaying the results in the console.
 
@@ -44,13 +45,14 @@ For the rolling mechanic I have this piece of code:
             });
     }
 ```
-- What it does is that I roll the initial cup that I am given and reroll it three times.
-- I'm using Enumerable.Range and Aggregate to instead of mutations to create a new version of the YahzeeCup instead of mutating the initial value that I'm returning.
-	- Inside the Aggregate I have a a function that tries to find the best combo made with these dice.
+- What the code does is that when I roll the initial cup that I am given and potentially reroll it two times.
+- I'm using Enumerable.Range and Aggregate to make new immutable versions instead of mutating the same value.
+	- Inside the Aggregate I have a a function that tries to find the best combination made with the dice roll.
    		- An important note is that I try to find the best "meaningful" one. I.e, not chance or no combination.
- 	- If I find no combination with the current dice, I will call a function to keep the dice that are the best ones for the player to keep.
-    - Once the dice to keep are chosen, I will create a new YahzeeCup where I reroll the dice or don't if I already have kept the best combo.
-- Finally, I return the new cup.
+ 	- If I find no combination with the current roll, I will call a function to keep the dice/dices that are the best ones for the player to keep.
+    - Once the dice/dices to keep are chosen, I will create a new YahzeeCup where I reroll the dice or don't if I already have kept the best combo.
+- Finally, I return the new verion of the YahzeeCup.
+
 All of this keeps the function immutable, use pure transformations and higher order functions.
 
 ```
@@ -62,11 +64,12 @@ All of this keeps the function immutable, use pure transformations and higher or
         .First()
         .ToImmutableList();
 ```
-- If no combo is found, this function is called to decide how many dice to keep.
+- If no combo is found, this function is called to decide how many dice/dices to keep.
 - I take the dice and transform them into a group order. This keeps all the dice in a neat pile with themselves.
-- The next thing I do is I sort by the most frequent die. So if I have three fours, I have the fours highest.
+- The next thing I do is I sort by the most frequent result. So if I have rolled three fours, I put the fours on the top of the list.
 	- ThenByDescending is to make sure I keep the highest value if I have a tie breaker.
 - Lastly, I take the first group (the one now ontop) and put it in an immutable list.
+
 All this makes for a functional way to keep dice instead of using for or while loops.
 
 ```
