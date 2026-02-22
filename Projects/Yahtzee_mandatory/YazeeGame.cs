@@ -73,17 +73,20 @@ public static class YahzeeGame
                     .Select(p =>
                         p.Tap(updated =>
                         {
-                            var lastBox = updated.ScoreCard.Boxes.Last();
-                            Console.WriteLine($"{updated.Name} scored {lastBox.Value} points in the '{lastBox.Key}' box. " +
-                                              $"Total Score: {updated.ScoreCard.Total}");
+                            if (updated.Box is not null && updated.Points > 0)
+                            {
+                                Console.WriteLine($"{updated.Player.Name} filled '{updated.Box}' box with {updated.Points} points." +
+                                    $"\nNew total score: {updated.Player.ScoreCard.Total}");
+                            }
+                            Console.WriteLine($"{updated.Player.Name}'s current total score {updated.Player.ScoreCard.Total}");
                         })).ToImmutableList();
 
                 // Determine the winner (winners if multiple) of the round
-                var maxScore = roundResults.Max(r => r.ScoreCard.Total);
+                var maxScore = roundResults.Max(r => r.Player.ScoreCard.Total);
 
                 var winners = roundResults
-                    .Where(r => r.ScoreCard.Total == maxScore)
-                    .Select(r => r.Name)
+                    .Where(r => r.Player.ScoreCard.Total == maxScore)
+                    .Select(r => r.Player.Name)
                     .ToImmutableList();
 
                 // Announce round winners
@@ -91,7 +94,7 @@ public static class YahzeeGame
                                   $"{string.Join(", ", winners)} " +
                                   $"with {maxScore} points!");
 
-                return roundResults;
+                return roundResults.Select(r => r.Player).ToImmutableList();
             });
     }
 
@@ -100,9 +103,6 @@ public static class YahzeeGame
         return Enumerable.Range(1, 3)
             .Aggregate(initialCup, (cup, _) =>
             {
-                // Randomly decide how many dice to keep
-                var keepCount = Random.Shared.Next(1, 6);
-
                 var bestCombo =
                     cup.GetAllYahtzeeCombinations()
                         .FirstOrDefault(c => c is not Chance and not NoCombination);
@@ -126,50 +126,59 @@ public static class YahzeeGame
             });
     }
 
-    static Player ApplyBestScore(Player player, YahzeeCup roll)
+    static (Player Player, string? Box, int Points) ApplyBestScore(Player player, YahzeeCup roll)
     {
         // Find the best available combination to score
-        var best =
-            roll.GetAllYahtzeeCombinations()
-                .Select(c => new { Combo = c, Box = c.GetType().Name })
-                .Where(x => player.ScoreCard.IsAvailable(x.Box))
+        var availableCombos =
+             roll.GetAllYahtzeeCombinations()
+             .Select(c => new 
+             { 
+                 Combo = c, 
+                 Box = c.GetType().Name 
+             })
+             .Where(c => player.ScoreCard.IsAvailable(c.Box))
+             .ToList();
+
+        var bestNonChance =
+            availableCombos
+                .Where(x => x.Box != "Chance" && x.Combo.Score > 0)
+                .OrderByDescending(x => x.Combo.Score)
                 .FirstOrDefault();
 
         // This is a fallback in case no boxes are available
-        if (best is null)
+        if (bestNonChance is not null)
         {
-            var fallbackBox =
-                player.ScoreCard
-                    .Boxes
-                    .Keys
-                    .DefaultIfEmpty()
-                    .FirstOrDefault(b => player.ScoreCard.IsAvailable(b))
-                ?? "Chance";
+            var filledCard = player.ScoreCard.Fill(bestNonChance.Box, bestNonChance.Combo.Score);
 
-            // Chance box gets the total score of the roll or we put 0 if not available
-            var score =
-                fallbackBox == "Chance"
-                    ? roll.Score
-                    : 0;
+            var finalCard = ApplyYahtzeeBonus(filledCard, bestNonChance.Combo);
 
-            return player with
-            {
-                ScoreCard = player.ScoreCard.Fill(fallbackBox, score)
-            };
+            return (
+                player with 
+                { 
+                    ScoreCard = finalCard 
+                }, 
+                bestNonChance.Box, 
+                bestNonChance.Combo.Score);
         }
 
-        // Fill the scorecard with the best combination found
-        var filledCard =
-            player.ScoreCard.Fill(best.Box, best.Combo.Score);
+        var scrificedBox = player.ScoreCard.Boxes
+            .Keys
+            .FirstOrDefault(b => player.ScoreCard.IsAvailable(b));
 
-        // Apply Yahtzee bonus if applicable
-        var finalCard =
-            ApplyYahtzeeBonus(filledCard, best.Combo);
-
-        return player with
+        if (scrificedBox is not null)
         {
-            ScoreCard = finalCard
-        };
+            Console.WriteLine($"{player.Name} has no good combinations left, sacrificing '{scrificedBox}' box.");
+            
+            return (player with 
+            { 
+                ScoreCard = player.ScoreCard.Fill(scrificedBox, 0) 
+            }, 
+            scrificedBox, 
+            0);
+        }
+
+        Console.WriteLine($"{player.Name} has no boxes left to fill, skipping turn.");
+        return (player, null, 0);
     }
 
     static ScoreCard ApplyYahtzeeBonus(ScoreCard card, YahzeeCup combo)
@@ -188,7 +197,7 @@ public static class YahzeeGame
     cup.dice
         .GroupBy(d => d.Pip)
         .OrderByDescending(g => g.Count())
-        .ThenByDescending(g => (int)g.Key) // prefer higher values
+        .ThenByDescending(g => (int)g.Key)
         .First()
         .ToImmutableList();
 
