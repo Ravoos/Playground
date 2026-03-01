@@ -56,7 +56,7 @@ public static class YahzeeGame
         var rounds = 13;
 
         // Track players and their scorecards through the rounds
-        _ = Enumerable.Range(1, rounds)
+        var games = Enumerable.Range(1, rounds)
             .Aggregate(players, (currentPlayers, round) =>
             {
                 Console.WriteLine($"\n--- Round {round} ---");
@@ -96,6 +96,15 @@ public static class YahzeeGame
 
                 return roundResults.Select(r => r.Player).ToImmutableList();
             });
+
+        Console.WriteLine("\nFinal Results:");
+        var finalMaxScore = games.Select(x => x.ScoreCard.Total).Max();
+        var finalWinners = games
+            .Where(x => x.ScoreCard.Total == finalMaxScore)
+            .Select(x => x.Name)
+            .ToImmutableList();
+
+        Console.WriteLine($"Winner(s): {string.Join(", ", finalWinners)} with {finalMaxScore} points!");
     }
 
     static YahzeeCup RollUpToThreeTimes(YahzeeCup initialCup)
