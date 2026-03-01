@@ -9,6 +9,13 @@ public record ScoreCard(
     private static readonly ImmutableHashSet<string> UpperSectionBoxes = ImmutableHashSet.Create(
     "Ones", "Twos", "Threes", "Fours", "Fives", "Sixes");
 
+    public static readonly ImmutableHashSet<string> AllBoxes =
+    ImmutableHashSet.Create(
+        "Ones", "Twos", "Threes", "Fours", "Fives", "Sixes",
+        "ThreeOfAKind", "FourOfAKind", "FullHouse",
+        "SmallStraight", "LargeStraight",
+        "Yahtzee", "Chance");
+
     public static ScoreCard Empty =>
         new(ImmutableDictionary<string, int>.Empty);
 

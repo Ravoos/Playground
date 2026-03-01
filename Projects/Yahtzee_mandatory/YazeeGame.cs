@@ -70,8 +70,8 @@ public static class YahzeeGame
                         return ApplyBestScore(player, rolledCup);
                     }
                     )
-                    .Select(p =>
-                        p.Tap(updated =>
+                    .Select(x =>
+                        x.Tap(updated =>
                         {
                             if (updated.Box is not null && updated.Points > 0)
                             {
@@ -82,11 +82,11 @@ public static class YahzeeGame
                         })).ToImmutableList();
 
                 // Determine the winner (winners if multiple) of the round
-                var maxScore = roundResults.Max(r => r.Player.ScoreCard.Total);
+                var maxScore = roundResults.Max(x => x.Player.ScoreCard.Total);
 
                 var winners = roundResults
-                    .Where(r => r.Player.ScoreCard.Total == maxScore)
-                    .Select(r => r.Player.Name)
+                    .Where(x => x.Player.ScoreCard.Total == maxScore)
+                    .Select(x => x.Player.Name)
                     .ToImmutableList();
 
                 // Announce round winners
@@ -105,12 +105,12 @@ public static class YahzeeGame
             {
                 var bestCombo =
                     cup.GetAllYahtzeeCombinations()
-                        .FirstOrDefault(c => c is not Chance and not NoCombination);
+                        .FirstOrDefault(x => x is not Chance and not NoCombination);
 
                 ImmutableList<Die> keptDice =
                     bestCombo is null
                         ? KeepMostFrequentValue(cup)
-                        : bestCombo.dice.ToImmutableList();
+                        : bestCombo.dice;
 
 
                 // Create a new cup with kept dice with a placeholder
@@ -128,42 +128,39 @@ public static class YahzeeGame
 
     static (Player Player, string? Box, int Points) ApplyBestScore(Player player, YahzeeCup roll)
     {
-        // Find the best available combination to score
         var availableCombos =
              roll.GetAllYahtzeeCombinations()
              .Select(c => new 
              { 
                  Combo = c, 
-                 Box = c.GetType().Name 
+                 Box = c.GetType().Name
              })
              .Where(c => player.ScoreCard.IsAvailable(c.Box))
              .ToList();
 
-        var bestNonChance =
+        var bestOption =
             availableCombos
-                .Where(x => x.Box != "Chance" && x.Combo.Score > 0)
+                .Where(x => x.Combo.Score > 0)
                 .OrderByDescending(x => x.Combo.Score)
                 .FirstOrDefault();
 
-        // This is a fallback in case no boxes are available
-        if (bestNonChance is not null)
+        if (bestOption is not null)
         {
-            var filledCard = player.ScoreCard.Fill(bestNonChance.Box, bestNonChance.Combo.Score);
+            var filledCard = player.ScoreCard.Fill(bestOption.Box, bestOption.Combo.Score);
 
-            var finalCard = ApplyYahtzeeBonus(filledCard, bestNonChance.Combo);
+            var finalCard = ApplyYahtzeeBonus(filledCard, bestOption.Combo);
 
             return (
                 player with 
                 { 
                     ScoreCard = finalCard 
-                }, 
-                bestNonChance.Box, 
-                bestNonChance.Combo.Score);
+                },
+                bestOption.Box,
+                bestOption.Combo.Score);
         }
 
-        var scrificedBox = player.ScoreCard.Boxes
-            .Keys
-            .FirstOrDefault(b => player.ScoreCard.IsAvailable(b));
+        var scrificedBox = ScoreCard.AllBoxes
+            .FirstOrDefault(x => player.ScoreCard.IsAvailable(x));
 
         if (scrificedBox is not null)
         {
@@ -195,9 +192,9 @@ public static class YahzeeGame
 
     static ImmutableList<Die> KeepMostFrequentValue(YahzeeCup cup) =>
     cup.dice
-        .GroupBy(d => d.Pip)
-        .OrderByDescending(g => g.Count())
-        .ThenByDescending(g => (int)g.Key)
+        .GroupBy(x => x.Pip)
+        .OrderByDescending(x => x.Count())
+        .ThenByDescending(x => (int)x.Key)
         .First()
         .ToImmutableList();
 
